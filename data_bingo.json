@@ -1,0 +1,12 @@
+[
+    {
+        "nombre": "ALEJO",
+        "tablas_seleccionadas": ";2;4;6;3;27;28;30;",
+        "estado": "PENDIENTE"
+    },
+    {
+        "nombre": "ALEJANDRO",
+        "tablas_seleccionadas": ";1;20;21;22;23;24;25;",
+        "estado": "PAGO"
+    }
+]
