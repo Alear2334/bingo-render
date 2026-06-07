@@ -1,0 +1,162 @@
+/* Paleta de Alta Gama: Grafito, Verde Esmeralda y Toques Dorados */
+body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    background-color: #f3f4f6;
+    margin: 0;
+    padding: 0;
+    color: #1f2937;
+}
+
+/* Barra de Navegación Ejecutiva */
+.navbar {
+    background: linear-gradient(135deg, #0f3a1a, #1b5e20);
+    display: flex;
+    justify-content: center;
+    padding: 14px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.navbar a {
+    color: #cbd5e1;
+    text-decoration: none;
+    padding: 10px 22px;
+    font-weight: 600;
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    border-radius: 6px;
+    margin: 0 8px;
+    transition: all 0.3s ease;
+}
+
+.navbar a:hover {
+    color: #ffffff;
+    background-color: rgba(255, 255, 255, 0.08);
+}
+
+.navbar a.active {
+    background-color: #ffffff;
+    color: #0f3a1a;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+/* Contenedores Principales */
+.container {
+    max-width: 1300px;
+    margin: 25px auto;
+    padding: 0 20px;
+}
+
+.header-titulo {
+    text-align: center;
+    color: #0f3a1a;
+    font-weight: 700;
+    font-size: 24px;
+    margin-bottom: 25px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+}
+
+/* === EL SECRETO DE LA BARRITA CORREDIZA (CONTENEDOR PREMIUM) === */
+.panel-corredizo {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid #e5e7eb;
+    padding: 20px;
+    margin-bottom: 25px;
+}
+
+.subtitulo-panel {
+    color: #0f3a1a;
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-left: 5px solid #2e7d32;
+    padding-left: 10px;
+    text-transform: uppercase;
+}
+
+/* Caja con la barra de deslizamiento interna */
+.scroll-interno {
+    max-height: 500px; /* Altura fija para que aparezca la barra */
+    overflow-y: auto;   /* Activa la barrita corrediza verticalmente */
+    padding-right: 8px;
+    border: 1px solid #f3f4f6;
+    border-radius: 6px;
+}
+
+/* Personalización estética de la barrita corrediza (Scrollbar moderna) */
+.scroll-interno::-webkit-scrollbar {
+    width: 8px;
+}
+
+.scroll-interno::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.scroll-interno::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 4px;
+    transition: background 0.2s;
+}
+
+.scroll-interno::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+}
+
+/* Tablas Estilo Dashboard */
+.tabla-moderna {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+}
+
+.tabla-moderna th {
+    background-color: #f8fafc;
+    color: #475569;
+    font-weight: 700;
+    padding: 12px 10px;
+    border-bottom: 2px solid #e2e8f0;
+    position: sticky; /* Mantiene los títulos fijos arriba al deslizar */
+    top: 0;
+    z-index: 10;
+}
+
+.tabla-moderna td {
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    color: #334155;
+}
+
+.tabla-moderna tr:hover {
+    background-color: #f8fafc;
+}
+
+/* Detalles de Distinción */
+.badge-tabla {
+    background-color: #e2e8f0;
+    color: #334155;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: 12px;
+}
+
+.badge-tabla.activo {
+    background-color: #dcfce7;
+    color: #15803d;
+}
+
+.celda-numero {
+    font-weight: 600;
+    background-color: #f8fafc;
+    border: 1px solid #e2e8f0 !important;
+}
+
+.celda-numero.asignado {
+    background-color: #e0f2fe;
+    color: #0369a1;
+}

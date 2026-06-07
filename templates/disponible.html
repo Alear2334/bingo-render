@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="header-titulo">🟩 Mapa Global de Ocupación</h1>
+
+    <div class="panel-corredizo">
+        <h2 class="subtitulo-panel">Tablero Analítico en Bloques Paralelos</h2>
+        
+        <div style="display: flex; gap: 15px; justify-content: space-between; align-items: flex-start;">
+            
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <span style="font-size: 11px; font-weight: bold; color: #0f3a1a; text-transform: uppercase;">LISTADO PARTICIPANTE BLOQUE 1 - 100</span>
+                    <button onclick="copiarBloque('tabla-b1')" style="background: #2e7d32; color: white; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;">Copiar</button>
+                </div>
+                <div class="scroll-interno" style="max-height: 450px; overflow-y: auto;">
+                    <table id="tabla-b1" class="tabla-moderna" style="font-size: 12px; text-align: center; width: 100%;">
+                        <tbody>
+                            {% for b in bloques %}
+                            <tr>
+                                <td style="font-weight: bold; background: #f1f5f9; white-space: nowrap; width: 30%;">TABLA {{ b.b1_nro }}</td>
+                                <td style="text-align: left; font-weight: 600; background: {{ '#dcfce7' if b.b1_name else 'white' }};">{{ b.b1_name if b.b1_name else '' }}</td>
+                                <td style="font-weight: bold; color: #1d4ed8; width: 10%;" data-estado="{{ b.b1_chk }}">{{ b.b1_chk if b.b1_chk else '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <span style="font-size: 11px; font-weight: bold; color: #0f3a1a; text-transform: uppercase;">LISTADO PARTICIPANTE BLOQUE 101 - 200</span>
+                    <button onclick="copiarBloque('tabla-b2')" style="background: #2e7d32; color: white; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;">Copiar</button>
+                </div>
+                <div class="scroll-interno" style="max-height: 450px; overflow-y: auto;">
+                    <table id="tabla-b2" class="tabla-moderna" style="font-size: 12px; text-align: center; width: 100%;">
+                        <tbody>
+                            {% for b in bloques %}
+                            <tr>
+                                <td style="font-weight: bold; background: #f1f5f9; white-space: nowrap; width: 30%;">TABLA {{ b.b2_nro }}</td>
+                                <td style="text-align: left; font-weight: 600; background: {{ '#dcfce7' if b.b2_name else 'white' }};">{{ b.b2_name if b.b2_name else '' }}</td>
+                                <td style="font-weight: bold; color: #1d4ed8; width: 10%;" data-estado="{{ b.b2_chk }}">{{ b.b2_chk if b.b2_chk else '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <span style="font-size: 11px; font-weight: bold; color: #0f3a1a; text-transform: uppercase;">LISTADO PARTICIPANTE BLOQUE 201 - 300</span>
+                    <button onclick="copiarBloque('tabla-b3')" style="background: #2e7d32; color: white; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;">Copiar</button>
+                </div>
+                <div class="scroll-interno" style="max-height: 450px; overflow-y: auto;">
+                    <table id="tabla-b3" class="tabla-moderna" style="font-size: 12px; text-align: center; width: 100%;">
+                        <tbody>
+                            {% for b in bloques %}
+                            <tr>
+                                <td style="font-weight: bold; background: #f1f5f9; white-space: nowrap; width: 30%;">TABLA {{ b.b3_nro }}</td>
+                                <td style="text-align: left; font-weight: 600; background: {{ '#dcfce7' if b.b3_name else 'white' }};">{{ b.b3_name if b.b3_name else '' }}</td>
+                                <td style="font-weight: bold; color: #1d4ed8; width: 10%;" data-estado="{{ b.b3_chk }}">{{ b.b3_chk if b.b3_chk else '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <span style="font-size: 11px; font-weight: bold; color: #0f3a1a; text-transform: uppercase;">LISTADO PARTICIPANTE BLOQUE 301 - 400</span>
+                    <button onclick="copiarBloque('tabla-b4')" style="background: #2e7d32; color: white; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;">Copiar</button>
+                </div>
+                <div class="scroll-interno" style="max-height: 450px; overflow-y: auto;">
+                    <table id="tabla-b4" class="tabla-moderna" style="font-size: 12px; text-align: center; width: 100%;">
+                        <tbody>
+                            {% for b in bloques %}
+                            <tr>
+                                <td style="font-weight: bold; background: #f1f5f9; white-space: nowrap; width: 30%;">TABLA {{ b.b4_nro }}</td>
+                                <td style="text-align: left; font-weight: 600; background: {{ '#dcfce7' if b.b4_name else 'white' }};">{{ b.b4_name if b.b4_name else '' }}</td>
+                                <td style="font-weight: bold; color: #1d4ed8; width: 10%;" data-estado="{{ b.b4_chk }}">{{ b.b4_chk if b.b4_chk else '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div style="flex: 1; min-width: 220px; background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; background: #f8fafc; padding: 6px; border-radius: 6px;">
+                    <span style="font-size: 11px; font-weight: bold; color: #0f3a1a; text-transform: uppercase;">LISTADO PARTICIPANTE BLOQUE 401 - 500</span>
+                    <button onclick="copiarBloque('tabla-b5')" style="background: #2e7d32; color: white; border: none; padding: 4px 8px; font-size: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; transition: 0.2s;">Copiar</button>
+                </div>
+                <div class="scroll-interno" style="max-height: 450px; overflow-y: auto;">
+                    <table id="tabla-b5" class="tabla-moderna" style="font-size: 12px; text-align: center; width: 100%;">
+                        <tbody>
+                            {% for b in bloques %}
+                            <tr>
+                                <td style="font-weight: bold; background: #f1f5f9; white-space: nowrap; width: 30%;">TABLA {{ b.b5_nro }}</td>
+                                <td style="text-align: left; font-weight: 600; background: {{ '#dcfce7' if b.b5_name else 'white' }};">{{ b.b5_name if b.b5_name else '' }}</td>
+                                <td style="font-weight: bold; color: #1d4ed8; width: 10%;" data-estado="{{ b.b5_chk }}">{{ b.b5_chk if b.b5_chk else '' }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+function copiarBloque(idTabla) {
+    const tabla = document.getElementById(idTabla);
+    let textoCopiar = "";
+    
+    if (idTabla === 'tabla-b1') {
+        textoCopiar = "*PARTICIPANTES EN JUEGO*\n\n";
+    }
+    
+    for (let fila of tabla.rows) {
+        let nroTabla = fila.cells[0].innerText.trim();
+        let nombre = fila.cells[1].innerText.trim();
+        let status = fila.cells[2].getAttribute('data-estado'); // Obtenemos el símbolo real
+        
+        let infoParticipante = nombre !== "" ? nombre : "";
+        let infoStatus = "";
+        
+        if (nombre !== "") {
+            // Asignar el icono según el estado capturado
+            infoStatus = (status === '✓') ? "✅" : "⏳";
+        }
+        
+        textoCopiar += `${nroTabla}: ${infoParticipante} ${infoStatus}\n`;
+    }
+
+    navigator.clipboard.writeText(textoCopiar).then(() => {
+        alert("¡Listado copiado al portapapeles con los iconos de estado! 📋");
+    }).catch(err => {
+        console.error('Error al copiar: ', err);
+    });
+}
+</script>
+{% endblock %}

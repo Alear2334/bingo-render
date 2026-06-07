@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div style="display: flex; justify-content: center; align-items: center; min-height: 60vh;">
+    <div style="width: 100%; max-width: 400px; padding: 40px; background: #ffffff; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); text-align: center; border: 1px solid #f0f0f0;">
+        
+        <h2 style="color: #333; font-size: 1.8rem; margin-bottom: 30px; font-weight: 700;">Iniciar Sesión</h2>
+        
+        <form action="/login" method="POST">
+            <div style="margin-bottom: 20px; text-align: left;">
+                <label style="display: block; margin-bottom: 8px; color: #555; font-weight: 600; font-size: 0.9rem;">Usuario</label>
+                <input type="text" name="usuario" placeholder="Ingresa tu usuario" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; box-sizing: border-box; outline: none;">
+            </div>
+            
+            <div style="margin-bottom: 25px; text-align: left;">
+                <label style="display: block; margin-bottom: 8px; color: #555; font-weight: 600; font-size: 0.9rem;">Contraseña</label>
+                <input type="text" name="clave" placeholder="Ingresa tu contraseña" required 
+                       style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1rem; box-sizing: border-box; outline: none;">
+            </div>
+            
+            <button type="submit" 
+                    style="width: 100%; padding: 14px; background: #008000; color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: background 0.3s;">
+                INGRESAR
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

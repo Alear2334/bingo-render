@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistema de Control Bingo 360</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/estilos.css') }}">
+</head>
+<body>
+    <div class="navbar">
+        <a href="/">CONTROL</a>
+        <a href="/listado">LISTADO</a>
+        <a href="/disponible">DISPONIBLE</a>
+        {% if session.get('logged_in') %}
+            <a href="/logout" style="background: #7f1d1d;">SALIR</a>
+        {% endif %}
+    </div>
+
+    <div class="container">
+        {% block content %}{% endblock %}
+        
+        {% if session.get('logged_in') %}
+        <div style="margin-top: 50px; padding: 20px; border-top: 2px solid #ccc;">
+            <h3>Cambiar Usuario y Clave</h3>
+            <form action="/editar_credenciales" method="POST">
+                <input type="text" name="usuario" placeholder="Nuevo Usuario" required>
+                <input type="text" name="clave" placeholder="Nueva Clave" required>
+                <button type="submit">Guardar Cambios</button>
+            </form>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

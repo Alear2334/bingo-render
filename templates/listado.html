@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h1 class="header-titulo">📋 Listado Maestro de Cartones</h1>
+
+    <div style="display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap;">
+        
+        <div style="flex: 1; min-width: 350px; position: sticky; top: 20px;">
+            <div style="background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <input type="text" id="inputBuscador" onkeyup="ejecutarBusqueda()" placeholder="🔍 Buscar por nombre, tabla o cartón..." 
+                       style="width: 100%; padding: 15px; border: 2px solid #e2e8f0; border-radius: 10px; font-size: 16px; outline: none; transition: 0.3s;">
+                
+                <div id="resultadoBusqueda" style="display: block; margin-top: 20px; text-align: center; min-height: 180px; background: #f8fafc; padding: 20px; border-radius: 12px; border: 2px dashed #cbd5e1;">
+                    <div id="contenedorFicha">
+                        <p style="color: #94a3b8; margin-top: 50px;">Escribe un nombre, número de tabla o cartón para ver la información.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="flex: 2; min-width: 600px;">
+            <div class="panel-corredizo">
+                <h2 class="subtitulo-panel">Base de datos relacional</h2>
+                <div class="scroll-interno" style="max-height: 700px; overflow-y: auto;">
+                    <table id="tablaMaestra" class="tabla-moderna" style="width: 100%;">
+                        <thead>
+                            <tr><th>Nro. Tabla</th><th>Nombre</th><th>Estatus</th><th colspan="6">Cartones</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for nro, t in tablas.items() %}
+                            <tr>
+                                <td><span class="badge-tabla {{ 'activo' if t.nombre else '' }}">TABLA {{ t.nro_tabla }}</span></td>
+                                <td style="font-weight: 600;">{{ t.nombre if t.nombre else '' }}</td>
+                                <td style="color: {{ '#1d4ed8' if t.check == '✓' else '#b91c1c' }}; font-weight: bold;">{{ t.check if t.check else '' }}</td>
+                                {% for carton in t.cartones %}
+                                <td class="celda-numero {{ 'asignado' if t.nombre else '' }}">{{ carton }}</td>
+                                {% endfor %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function ejecutarBusqueda() {
+    const filtro = document.getElementById('inputBuscador').value.toLowerCase().trim();
+    const contenedor = document.getElementById('contenedorFicha');
+    const tabla = document.getElementById('tablaMaestra');
+    
+    // Si el buscador está vacío, restauramos el mensaje inicial
+    if (filtro === "") {
+        contenedor.innerHTML = '<p style="color: #94a3b8; margin-top: 50px;">Escribe un nombre, número de tabla o cartón para ver la información.</p>';
+        return;
+    }
+    
+    let encontrado = false;
+    for (let i = 1; i < tabla.rows.length; i++) {
+        let fila = tabla.rows[i];
+        let nombre = fila.cells[1].innerText.toLowerCase();
+        let nroTabla = fila.cells[0].innerText.toLowerCase();
+        let cartones = Array.from(fila.cells).slice(3).map(c => c.innerText);
+        
+        if (nombre.includes(filtro) || nroTabla.includes(filtro) || cartones.includes(filtro)) {
+            encontrado = true;
+            contenedor.innerHTML = `
+                <div style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Nombre y Apellido</div>
+                <div style="font-size: 18px; font-weight: 800; color: #1e293b; margin-bottom: 15px;">${fila.cells[1].innerText || 'NO ASIGNADO'}</div>
+                
+                <div style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Número de Tabla</div>
+                <div style="margin-bottom: 15px;"><span class="badge-tabla activo" style="padding: 5px 15px;">${fila.cells[0].innerText}</span></div>
+                
+                <div style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Número de Cartones</div>
+                <div style="display: flex; justify-content: center; gap: 5px; margin-bottom: 15px;">
+                    ${cartones.map(c => `<span style="background: #e0f2fe; padding: 4px 8px; border-radius: 4px; font-weight: bold; color: #0369a1;">${c}</span>`).join('')}
+                </div>
+                
+                <div style="font-size: 12px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 5px;">Estatus</div>
+                <div style="font-size: 20px; color: ${fila.cells[2].innerText === '✓' ? '#16a34a' : '#dc2626'}; font-weight: bold;">
+                    ${fila.cells[2].innerText}
+                </div>
+            `;
+            break; 
+        }
+    }
+    
+    if (!encontrado) {
+        contenedor.innerHTML = "<p style='color: #dc2626; font-weight: bold; margin-top: 50px;'>No se encontraron resultados para: " + filtro + "</p>";
+    }
+}
+</script>
+{% endblock %}
