@@ -13,9 +13,15 @@ app.secret_key = "bingo360_secret_key"
 
 # --- FUNCIONES DE PERSISTENCIA Y CONFIG ---
 def cargar_config():
+    # Intentamos cargar el archivo si existe
     if os.path.exists(ARCHIVO_CONFIG):
-        with open(ARCHIVO_CONFIG, 'r') as f: return json.load(f)
-    return {"usuario": "admin", "clave": "1234"}
+        try:
+            with open(ARCHIVO_CONFIG, 'r') as f: 
+                return json.load(f)
+        except Exception:
+            pass
+    # Si falla la lectura o el archivo no está, devolvemos tu contraseña deseada
+    return {"usuario": "admin", "clave": "506972"}
 
 def cargar_desde_disco():
     if os.path.exists(ARCHIVO_DATA):
