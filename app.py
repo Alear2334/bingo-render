@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from pymongo import MongoClient
+import json
 import os
 
 # --- CONEXIÓN A MONGODB (NUBE) ---
-# Aquí pegamos tu URL, asegúrate de que tenga la contraseña '506972' donde dice admin:506972@...
+# Se utiliza la URL proporcionada para persistencia permanente en Render
 MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?appName=Cluster0"
-
 client = MongoClient(MONGO_URI)
 db = client['bingo_db']
 coleccion = db['registros']
@@ -13,18 +13,25 @@ coleccion = db['registros']
 app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
-# --- FUNCIONES DE PERSISTENCIA ---
+# --- FUNCIONES DE PERSISTENCIA (MONGODB) ---
 def cargar_desde_disco():
-    # Traemos los datos de la nube
-    return list(coleccion.find({}, {'_id': 0}))
+    try:
+        # Trae todos los registros de la colección, excluyendo el ID de MongoDB
+        return list(coleccion.find({}, {'_id': 0}))
+    except Exception as e:
+        print(f"Error al cargar: {e}")
+        return []
 
 def guardar_en_disco(datos):
-    # Guardamos en la nube borrando lo anterior para mantener siempre la versión más reciente
-    coleccion.delete_many({})
-    if datos:
-        coleccion.insert_many(datos)
+    try:
+        # Borra los datos actuales y guarda la lista completa para mantener consistencia
+        coleccion.delete_many({})
+        if datos:
+            coleccion.insert_many(datos)
+    except Exception as e:
+        print(f"Error al guardar: {e}")
 
-# Cargamos registros al iniciar
+# Carga inicial
 registros_control = cargar_desde_disco()
 PRECIO_UNITARIO = 500.00
 
@@ -36,9 +43,11 @@ def verificar_login():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # Contraseña fija
+    usuario_correcto = "admin"
+    clave_correcta = "506972"
+    
     if request.method == 'POST':
-        if request.form.get('usuario') == "admin" and request.form.get('clave') == "506972":
+        if request.form.get('usuario') == usuario_correcto and request.form.get('clave') == clave_correcta:
             session['logged_in'] = True
             return redirect(url_for('vista_control'))
         flash("Usuario o clave incorrectos")
@@ -61,7 +70,7 @@ def procesar_matriz_bingo():
     total_vendidos = 0
     monto_acumulado = 0.0
     
-    # Recargamos registros de la nube cada vez que procesamos
+    # Usamos registros actuales cargados desde la base de datos
     actuales = cargar_desde_disco()
     
     for registro in actuales:
@@ -84,9 +93,16 @@ def procesar_matriz_bingo():
 @app.route('/')
 def vista_control():
     global registros_control
-    registros_control = cargar_desde_disco() # Sincronizar con la nube
+    registros_control = cargar_desde_disco()
     _, vendidos, monto, precio = procesar_matriz_bingo()
     return render_template('control.html', registros=registros_control, total_vendidos=vendidos, monto_total=monto, precio=precio)
+
+@app.route('/actualizar_precio', methods=['POST'])
+def controlador_actualizar_precio():
+    global PRECIO_UNITARIO
+    nuevo_precio = request.form.get('nuevo_precio', 0)
+    PRECIO_UNITARIO = float(nuevo_precio)
+    return redirect(url_for('vista_control'))
 
 @app.route('/guardar_control', methods=['POST'])
 def controlador_guardar():
@@ -99,7 +115,6 @@ def controlador_guardar():
     
     indices_nuevos = [int(p) for p in tablas_sel.split(';') if p.strip().isdigit()]
     
-    registros_control = cargar_desde_disco()
     tablas_en_uso = []
     for registro in registros_control:
         tablas_en_uso.extend([int(p) for p in registro["tablas_seleccionadas"].split(';') if p.strip().isdigit()])
@@ -114,4 +129,40 @@ def controlador_guardar():
         
     return redirect(url_for('vista_control'))
 
-# ... (El resto de tus rutas de eliminar y cambiar estado se mantienen igual, solo asegúrate de usar cargar_desde_disco() y guardar_en_disco() dentro de ellas)
+@app.route('/cambiar_estado/<int:index>', methods=['POST'])
+def controlador_cambiar_estado(index):
+    registros_control[index]['estado'] = request.form.get('nuevo_estado')
+    guardar_en_disco(registros_control)
+    return redirect(url_for('vista_control'))
+
+@app.route('/eliminar_control/<int:index>')
+def controlador_eliminar(index):
+    registros_control.pop(index)
+    guardar_en_disco(registros_control)
+    return redirect(url_for('vista_control'))
+
+@app.route('/borrar_todo')
+def controlador_borrar_todo():
+    registros_control.clear()
+    guardar_en_disco(registros_control)
+    return redirect(url_for('vista_control'))
+
+@app.route('/listado')
+def vista_listado():
+    tablas, _, _, _ = procesar_matriz_bingo()
+    return render_template('listado.html', tablas=tablas)
+
+@app.route('/disponible')
+def vista_disponibilidad():
+    tablas, _, _, _ = procesar_matriz_bingo()
+    matriz_render = []
+    for r in range(1, 101):
+        fila_bloque = {
+            "b1_nro": r,     "b1_name": tablas[r]["nombre"],     "b1_chk": tablas[r]["check"],
+            "b2_nro": r+100, "b2_name": tablas[r+100]["nombre"], "b2_chk": tablas[r+100]["check"],
+            "b3_nro": r+200, "b3_name": tablas[r+200]["nombre"], "b3_chk": tablas[r+200]["check"],
+            "b4_nro": r+300, "b4_name": tablas[r+300]["nombre"], "b4_chk": tablas[r+300]["check"],
+            "b5_nro": r+400, "b5_name": tablas[r+400]["nombre"], "b5_chk": tablas[r+400]["check"]
+        }
+        matriz_render.append(fila_bloque)
+    return render_template('disponible.html', bloques=matriz_render)
