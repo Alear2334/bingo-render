@@ -2,8 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, ses
 import json
 import os
 
-# --- AJUSTE DE RUTAS ---
-# Esto garantiza que los archivos siempre se guarden en la misma carpeta que el script
+# --- RUTAS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 ARCHIVO_DATA = os.path.join(BASE_DIR, 'data_bingo.json')
 ARCHIVO_CONFIG = os.path.join(BASE_DIR, 'config.json')
@@ -11,21 +10,12 @@ ARCHIVO_CONFIG = os.path.join(BASE_DIR, 'config.json')
 app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
-# --- FUNCIONES DE PERSISTENCIA Y CONFIG ---
-def cargar_config():
-    # Intentamos cargar el archivo si existe
-    if os.path.exists(ARCHIVO_CONFIG):
-        try:
-            with open(ARCHIVO_CONFIG, 'r') as f: 
-                return json.load(f)
-        except Exception:
-            pass
-    # Si falla la lectura o el archivo no está, devolvemos tu contraseña deseada
-    return {"usuario": "admin", "clave": "506972"}
-
+# --- FUNCIONES ---
 def cargar_desde_disco():
     if os.path.exists(ARCHIVO_DATA):
-        with open(ARCHIVO_DATA, 'r') as f: return json.load(f)
+        try:
+            with open(ARCHIVO_DATA, 'r') as f: return json.load(f)
+        except: return []
     return []
 
 def guardar_en_disco(datos):
@@ -42,9 +32,12 @@ def verificar_login():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    config = cargar_config()
+    # CONTRASEÑA FIJA PARA EVITAR ERRORES EN LA NUBE
+    usuario_correcto = "admin"
+    clave_correcta = "506972"
+    
     if request.method == 'POST':
-        if request.form.get('usuario') == config['usuario'] and request.form.get('clave') == config['clave']:
+        if request.form.get('usuario') == usuario_correcto and request.form.get('clave') == clave_correcta:
             session['logged_in'] = True
             return redirect(url_for('vista_control'))
         flash("Usuario o clave incorrectos")
@@ -57,9 +50,11 @@ def logout():
 
 @app.route('/editar_credenciales', methods=['POST'])
 def editar_credenciales():
+    # Esto guardará en el JSON por si quieres cambiarla en el futuro, 
+    # pero el login arriba ya está forzado a la clave 506972
     with open(ARCHIVO_CONFIG, 'w') as f:
         json.dump({"usuario": request.form['usuario'], "clave": request.form['clave']}, f)
-    flash("Credenciales actualizadas correctamente")
+    flash("Credenciales guardadas en archivo, pero la clave maestra sigue siendo 506972")
     return redirect(url_for('vista_control'))
 
 # --- LÓGICA DE PROCESAMIENTO ---
