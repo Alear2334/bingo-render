@@ -1,10 +1,9 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from pymongo import MongoClient
-import json
 import os
 
-# --- CONEXIÓN A MONGODB (NUBE) ---
-# Se utiliza la URL proporcionada para persistencia permanente en Render
+# --- CONEXIÓN A MONGODB ---
+# Reemplaza la contraseña <db_password> por '506972' en la cadena si fuera necesario
 MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?appName=Cluster0"
 client = MongoClient(MONGO_URI)
 db = client['bingo_db']
@@ -13,25 +12,17 @@ coleccion = db['registros']
 app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
-# --- FUNCIONES DE PERSISTENCIA (MONGODB) ---
+# --- FUNCIONES DE PERSISTENCIA ---
 def cargar_desde_disco():
-    try:
-        # Trae todos los registros de la colección, excluyendo el ID de MongoDB
-        return list(coleccion.find({}, {'_id': 0}))
-    except Exception as e:
-        print(f"Error al cargar: {e}")
-        return []
+    # Recupera todos los registros desde MongoDB
+    return list(coleccion.find({}, {'_id': 0}))
 
 def guardar_en_disco(datos):
-    try:
-        # Borra los datos actuales y guarda la lista completa para mantener consistencia
-        coleccion.delete_many({})
-        if datos:
-            coleccion.insert_many(datos)
-    except Exception as e:
-        print(f"Error al guardar: {e}")
+    # Limpia la colección y guarda la lista actualizada
+    coleccion.delete_many({})
+    if datos:
+        coleccion.insert_many(datos)
 
-# Carga inicial
 registros_control = cargar_desde_disco()
 PRECIO_UNITARIO = 500.00
 
@@ -45,7 +36,6 @@ def verificar_login():
 def login():
     usuario_correcto = "admin"
     clave_correcta = "506972"
-    
     if request.method == 'POST':
         if request.form.get('usuario') == usuario_correcto and request.form.get('clave') == clave_correcta:
             session['logged_in'] = True
@@ -70,9 +60,7 @@ def procesar_matriz_bingo():
     total_vendidos = 0
     monto_acumulado = 0.0
     
-    # Usamos registros actuales cargados desde la base de datos
     actuales = cargar_desde_disco()
-    
     for registro in actuales:
         propietario = registro["nombre"].strip().upper()
         cadena_seleccion = registro["tablas_seleccionadas"]
@@ -114,7 +102,6 @@ def controlador_guardar():
     if not tablas_sel.endswith(';'): tablas_sel = f"{tablas_sel};"
     
     indices_nuevos = [int(p) for p in tablas_sel.split(';') if p.strip().isdigit()]
-    
     tablas_en_uso = []
     for registro in registros_control:
         tablas_en_uso.extend([int(p) for p in registro["tablas_seleccionadas"].split(';') if p.strip().isdigit()])
@@ -126,7 +113,6 @@ def controlador_guardar():
     else:
         registros_control.append({"nombre": nombre, "tablas_seleccionadas": tablas_sel, "estado": estado})
         guardar_en_disco(registros_control)
-        
     return redirect(url_for('vista_control'))
 
 @app.route('/cambiar_estado/<int:index>', methods=['POST'])
