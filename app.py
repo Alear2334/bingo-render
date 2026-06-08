@@ -1,27 +1,25 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from pymongo import MongoClient
+import json
 import os
 
-# --- CONEXIÓN A MONGODB ---
-# Reemplaza la contraseña <db_password> por '506972' en la cadena si fuera necesario
-MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?appName=Cluster0"
-client = MongoClient(MONGO_URI)
-db = client['bingo_db']
-coleccion = db['registros']
+# --- RUTAS ---
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+ARCHIVO_DATA = os.path.join(BASE_DIR, 'data_bingo.json')
+ARCHIVO_CONFIG = os.path.join(BASE_DIR, 'config.json')
 
 app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
-# --- FUNCIONES DE PERSISTENCIA ---
+# --- FUNCIONES ---
 def cargar_desde_disco():
-    # Recupera todos los registros desde MongoDB
-    return list(coleccion.find({}, {'_id': 0}))
+    if os.path.exists(ARCHIVO_DATA):
+        try:
+            with open(ARCHIVO_DATA, 'r') as f: return json.load(f)
+        except: return []
+    return []
 
 def guardar_en_disco(datos):
-    # Limpia la colección y guarda la lista actualizada
-    coleccion.delete_many({})
-    if datos:
-        coleccion.insert_many(datos)
+    with open(ARCHIVO_DATA, 'w') as f: json.dump(datos, f, indent=4)
 
 registros_control = cargar_desde_disco()
 PRECIO_UNITARIO = 500.00
@@ -34,8 +32,10 @@ def verificar_login():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # CONTRASEÑA FIJA PARA EVITAR ERRORES EN LA NUBE
     usuario_correcto = "admin"
     clave_correcta = "506972"
+    
     if request.method == 'POST':
         if request.form.get('usuario') == usuario_correcto and request.form.get('clave') == clave_correcta:
             session['logged_in'] = True
@@ -47,6 +47,15 @@ def login():
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
+
+@app.route('/editar_credenciales', methods=['POST'])
+def editar_credenciales():
+    # Esto guardará en el JSON por si quieres cambiarla en el futuro, 
+    # pero el login arriba ya está forzado a la clave 506972
+    with open(ARCHIVO_CONFIG, 'w') as f:
+        json.dump({"usuario": request.form['usuario'], "clave": request.form['clave']}, f)
+    flash("Credenciales guardadas en archivo, pero la clave maestra sigue siendo 506972")
+    return redirect(url_for('vista_control'))
 
 # --- LÓGICA DE PROCESAMIENTO ---
 def procesar_matriz_bingo():
@@ -60,8 +69,7 @@ def procesar_matriz_bingo():
     total_vendidos = 0
     monto_acumulado = 0.0
     
-    actuales = cargar_desde_disco()
-    for registro in actuales:
+    for registro in registros_control:
         propietario = registro["nombre"].strip().upper()
         cadena_seleccion = registro["tablas_seleccionadas"]
         status_financiero = registro["estado"]
@@ -80,8 +88,6 @@ def procesar_matriz_bingo():
 # --- RUTAS PRINCIPALES ---
 @app.route('/')
 def vista_control():
-    global registros_control
-    registros_control = cargar_desde_disco()
     _, vendidos, monto, precio = procesar_matriz_bingo()
     return render_template('control.html', registros=registros_control, total_vendidos=vendidos, monto_total=monto, precio=precio)
 
@@ -102,17 +108,22 @@ def controlador_guardar():
     if not tablas_sel.endswith(';'): tablas_sel = f"{tablas_sel};"
     
     indices_nuevos = [int(p) for p in tablas_sel.split(';') if p.strip().isdigit()]
+    
+    tablas_ocupadas = []
     tablas_en_uso = []
     for registro in registros_control:
         tablas_en_uso.extend([int(p) for p in registro["tablas_seleccionadas"].split(';') if p.strip().isdigit()])
         
-    tablas_ocupadas = [str(nro) for nro in indices_nuevos if nro in tablas_en_uso]
+    for nro in indices_nuevos:
+        if nro in tablas_en_uso:
+            tablas_ocupadas.append(str(nro))
             
     if tablas_ocupadas:
         flash(f"¡Cuidado! Las tablas ya están asignadas: {', '.join(tablas_ocupadas)}", "danger")
     else:
         registros_control.append({"nombre": nombre, "tablas_seleccionadas": tablas_sel, "estado": estado})
         guardar_en_disco(registros_control)
+        
     return redirect(url_for('vista_control'))
 
 @app.route('/cambiar_estado/<int:index>', methods=['POST'])
