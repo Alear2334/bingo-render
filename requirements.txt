@@ -1,4 +1,4 @@
 flask
-pymongo==4.10.0
+pymongo[srv]
 dnspython
 gunicorn
