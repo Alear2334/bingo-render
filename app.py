@@ -6,7 +6,6 @@ app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
 # --- CONEXIÓN A MONGODB ATLAS ---
-# Sustituye con tu URI de conexión si es necesario, esta configuración evita bloqueos
 MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?retryWrites=true&w=majority"
 client = MongoClient(MONGO_URI, serverSelectionTimeoutMS=5000)
 db = client['bingo_db']
@@ -14,11 +13,9 @@ coleccion = db['registros']
 
 # --- FUNCIONES DE PERSISTENCIA EN LA NUBE ---
 def cargar_registros():
-    # Carga desde MongoDB en lugar de un archivo JSON
     return list(coleccion.find({}, {'_id': 0}))
 
 def guardar_registros(datos):
-    # Primero limpiamos la colección y guardamos la lista completa
     coleccion.delete_many({})
     if datos:
         coleccion.insert_many(datos)
@@ -74,6 +71,15 @@ def vista_control():
     registros = cargar_registros()
     _, vendidos, monto, precio = procesar_matriz_bingo()
     return render_template('control.html', registros=registros, total_vendidos=vendidos, monto_total=monto, precio=precio)
+
+# --- NUEVO AJUSTE: RUTA PARA ACTUALIZAR PRECIO ---
+@app.route('/actualizar_precio', methods=['POST'])
+def controlador_actualizar_precio():
+    global PRECIO_UNITARIO
+    nuevo_precio = request.form.get('nuevo_precio')
+    if nuevo_precio:
+        PRECIO_UNITARIO = float(nuevo_precio)
+    return redirect(url_for('vista_control'))
 
 @app.route('/guardar_control', methods=['POST'])
 def controlador_guardar():
