@@ -5,21 +5,22 @@ app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
 # --- CONEXIÓN A MONGODB ATLAS ---
-MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?retryWrites=true&w=majority"
+# El parámetro serverSelectionTimeoutMS evita que el servidor se congele si no conecta rápido
+MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?retryWrites=true&w=majority&serverSelectionTimeoutMS=5000"
+
 client = MongoClient(MONGO_URI)
 db = client['bingo_db']
 coleccion = db['registros']
 
-# --- FUNCIONES DE PERSISTENCIA (Sustituyen al JSON) ---
+# --- FUNCIONES DE PERSISTENCIA ---
 def cargar_desde_disco():
     return list(coleccion.find({}, {'_id': 0}))
 
 def guardar_en_disco(datos):
-    coleccion.delete_many({}) # Limpia la colección
+    coleccion.delete_many({}) # Limpia la nube antes de guardar lo nuevo
     if datos:
-        coleccion.insert_many(datos) # Guarda la nueva lista
+        coleccion.insert_many(datos)
 
-# PRECIO_UNITARIO se mantiene en memoria durante la sesión
 PRECIO_UNITARIO = 500.00
 
 # --- SEGURIDAD ---
@@ -54,7 +55,6 @@ def procesar_matriz_bingo():
     total_vendidos = 0
     monto_acumulado = 0.0
     
-    # Usamos la nueva función para traer datos de MongoDB
     registros_actuales = cargar_desde_disco()
     for registro in registros_actuales:
         propietario = registro["nombre"].strip().upper()
@@ -108,7 +108,6 @@ def controlador_guardar():
     else:
         registros.append({"nombre": nombre, "tablas_seleccionadas": tablas_sel, "estado": estado})
         guardar_en_disco(registros)
-        
     return redirect(url_for('vista_control'))
 
 @app.route('/cambiar_estado/<int:index>', methods=['POST'])
