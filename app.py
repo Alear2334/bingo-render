@@ -1,27 +1,25 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-import json
-import os
-
-# --- RUTAS ---
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-ARCHIVO_DATA = os.path.join(BASE_DIR, 'data_bingo.json')
-ARCHIVO_CONFIG = os.path.join(BASE_DIR, 'config.json')
+from pymongo import MongoClient
 
 app = Flask(__name__)
 app.secret_key = "bingo360_secret_key" 
 
-# --- FUNCIONES ---
+# --- CONEXIÓN A MONGODB ATLAS ---
+MONGO_URI = "mongodb+srv://admin:506972@cluster0.qcnjhxs.mongodb.net/?retryWrites=true&w=majority"
+client = MongoClient(MONGO_URI)
+db = client['bingo_db']
+coleccion = db['registros']
+
+# --- FUNCIONES DE PERSISTENCIA (Sustituyen al JSON) ---
 def cargar_desde_disco():
-    if os.path.exists(ARCHIVO_DATA):
-        try:
-            with open(ARCHIVO_DATA, 'r') as f: return json.load(f)
-        except: return []
-    return []
+    return list(coleccion.find({}, {'_id': 0}))
 
 def guardar_en_disco(datos):
-    with open(ARCHIVO_DATA, 'w') as f: json.dump(datos, f, indent=4)
+    coleccion.delete_many({}) # Limpia la colección
+    if datos:
+        coleccion.insert_many(datos) # Guarda la nueva lista
 
-registros_control = cargar_desde_disco()
+# PRECIO_UNITARIO se mantiene en memoria durante la sesión
 PRECIO_UNITARIO = 500.00
 
 # --- SEGURIDAD ---
@@ -32,12 +30,8 @@ def verificar_login():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
-    # CONTRASEÑA FIJA PARA EVITAR ERRORES EN LA NUBE
-    usuario_correcto = "admin"
-    clave_correcta = "506972"
-    
     if request.method == 'POST':
-        if request.form.get('usuario') == usuario_correcto and request.form.get('clave') == clave_correcta:
+        if request.form.get('usuario') == "admin" and request.form.get('clave') == "506972":
             session['logged_in'] = True
             return redirect(url_for('vista_control'))
         flash("Usuario o clave incorrectos")
@@ -47,15 +41,6 @@ def login():
 def logout():
     session.pop('logged_in', None)
     return redirect(url_for('login'))
-
-@app.route('/editar_credenciales', methods=['POST'])
-def editar_credenciales():
-    # Esto guardará en el JSON por si quieres cambiarla en el futuro, 
-    # pero el login arriba ya está forzado a la clave 506972
-    with open(ARCHIVO_CONFIG, 'w') as f:
-        json.dump({"usuario": request.form['usuario'], "clave": request.form['clave']}, f)
-    flash("Credenciales guardadas en archivo, pero la clave maestra sigue siendo 506972")
-    return redirect(url_for('vista_control'))
 
 # --- LÓGICA DE PROCESAMIENTO ---
 def procesar_matriz_bingo():
@@ -69,7 +54,9 @@ def procesar_matriz_bingo():
     total_vendidos = 0
     monto_acumulado = 0.0
     
-    for registro in registros_control:
+    # Usamos la nueva función para traer datos de MongoDB
+    registros_actuales = cargar_desde_disco()
+    for registro in registros_actuales:
         propietario = registro["nombre"].strip().upper()
         cadena_seleccion = registro["tablas_seleccionadas"]
         status_financiero = registro["estado"]
@@ -88,18 +75,19 @@ def procesar_matriz_bingo():
 # --- RUTAS PRINCIPALES ---
 @app.route('/')
 def vista_control():
+    registros = cargar_desde_disco()
     _, vendidos, monto, precio = procesar_matriz_bingo()
-    return render_template('control.html', registros=registros_control, total_vendidos=vendidos, monto_total=monto, precio=precio)
+    return render_template('control.html', registros=registros, total_vendidos=vendidos, monto_total=monto, precio=precio)
 
 @app.route('/actualizar_precio', methods=['POST'])
 def controlador_actualizar_precio():
     global PRECIO_UNITARIO
-    nuevo_precio = request.form.get('nuevo_precio', 0)
-    PRECIO_UNITARIO = float(nuevo_precio)
+    PRECIO_UNITARIO = float(request.form.get('nuevo_precio', 500.0))
     return redirect(url_for('vista_control'))
 
 @app.route('/guardar_control', methods=['POST'])
 def controlador_guardar():
+    registros = cargar_desde_disco()
     nombre = request.form.get('nombre', '').strip().upper()
     tablas_sel = request.form.get('tablas_seleccionadas', '').strip()
     estado = request.form.get('estado')
@@ -109,39 +97,37 @@ def controlador_guardar():
     
     indices_nuevos = [int(p) for p in tablas_sel.split(';') if p.strip().isdigit()]
     
-    tablas_ocupadas = []
     tablas_en_uso = []
-    for registro in registros_control:
-        tablas_en_uso.extend([int(p) for p in registro["tablas_seleccionadas"].split(';') if p.strip().isdigit()])
+    for r in registros:
+        tablas_en_uso.extend([int(p) for p in r["tablas_seleccionadas"].split(';') if p.strip().isdigit()])
         
-    for nro in indices_nuevos:
-        if nro in tablas_en_uso:
-            tablas_ocupadas.append(str(nro))
+    tablas_ocupadas = [str(nro) for nro in indices_nuevos if nro in tablas_en_uso]
             
     if tablas_ocupadas:
-        flash(f"¡Cuidado! Las tablas ya están asignadas: {', '.join(tablas_ocupadas)}", "danger")
+        flash(f"¡Cuidado! Tablas ya asignadas: {', '.join(tablas_ocupadas)}", "danger")
     else:
-        registros_control.append({"nombre": nombre, "tablas_seleccionadas": tablas_sel, "estado": estado})
-        guardar_en_disco(registros_control)
+        registros.append({"nombre": nombre, "tablas_seleccionadas": tablas_sel, "estado": estado})
+        guardar_en_disco(registros)
         
     return redirect(url_for('vista_control'))
 
 @app.route('/cambiar_estado/<int:index>', methods=['POST'])
 def controlador_cambiar_estado(index):
-    registros_control[index]['estado'] = request.form.get('nuevo_estado')
-    guardar_en_disco(registros_control)
+    registros = cargar_desde_disco()
+    registros[index]['estado'] = request.form.get('nuevo_estado')
+    guardar_en_disco(registros)
     return redirect(url_for('vista_control'))
 
 @app.route('/eliminar_control/<int:index>')
 def controlador_eliminar(index):
-    registros_control.pop(index)
-    guardar_en_disco(registros_control)
+    registros = cargar_desde_disco()
+    registros.pop(index)
+    guardar_en_disco(registros)
     return redirect(url_for('vista_control'))
 
 @app.route('/borrar_todo')
 def controlador_borrar_todo():
-    registros_control.clear()
-    guardar_en_disco(registros_control)
+    guardar_en_disco([])
     return redirect(url_for('vista_control'))
 
 @app.route('/listado')
